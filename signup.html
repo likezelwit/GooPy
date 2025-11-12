@@ -103,7 +103,7 @@ const GoopyDB = firebase.firestore();
   </div>
 </div>
 
-<!-- Popup UI -->
+<!-- Popup -->
 <div id="popup" class="popup">
   <h3></h3><p></p>
   <button id="popupBtn">Oke</button>
@@ -112,10 +112,10 @@ const GoopyDB = firebase.firestore();
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <script>
-// 🔹 Auto redirect jika user sudah login
+// 🔹 Redirect otomatis jika sudah login
 GoopyAuth.onAuthStateChanged(user => { if(user) window.location.href="./home.html"; });
 
-// 🔹 Popup system
+// 🔹 Popup
 function showPopup(title,message,type="info"){
   const popup=document.getElementById("popup");
   popup.querySelector("h3").textContent=title;
@@ -125,7 +125,7 @@ function showPopup(title,message,type="info"){
 }
 document.getElementById("popupBtn").addEventListener("click",()=>{document.getElementById("popup").classList.remove("show");});
 
-// 🔹 Validasi & format nomor HP
+// 🔹 Validasi nomor telepon
 function validatePhoneNumber(phone){
   if(!phone) return false;
   const cleaned = phone.replace(/[^\d+]/g,'');
@@ -139,33 +139,40 @@ function formatPhoneNumber(phone){
   return cleaned;
 }
 
-// 🔹 SIGNUP FUNCTION
+// 🔹 Signup function (versi fix Auth sinkron)
 async function signup(email,password,name,phone,username){
   console.log("🔹 Mulai signup...");
-
   const userCredential = await GoopyAuth.createUserWithEmailAndPassword(email,password);
-  const uid = userCredential.user.uid;
+  const user = userCredential.user;
+  const uid = user.uid;
 
-  await userCredential.user.updateProfile({displayName:name});
+  await user.updateProfile({ displayName:name });
+
+  // 🔸 Tunggu hingga Auth siap (supaya request.auth.uid == uid)
+  await new Promise(resolve=>{
+    const unsub = GoopyAuth.onAuthStateChanged(u=>{
+      if(u && u.uid === uid){ resolve(); unsub(); }
+    });
+  });
+
   const formattedPhone = formatPhoneNumber(phone);
-
   const userData = {
-    uid: uid,
-    name: name,
-    username: username,
-    email: email,
+    uid,
+    name,
+    username,
+    email,
     phone: formattedPhone,
     pin: "",
     balance: 0,
     transactions: [],
     recentContacts: [],
-    createdAt: new Date() // pakai timestamp JS agar rules aman
+    createdAt: new Date()
   };
 
   console.log("🟢 Simpan data user ke Firestore:", userData);
   await GoopyDB.collection("users").doc(uid).set(userData);
   console.log("✅ Data Firestore berhasil dibuat");
-  return userCredential.user;
+  return user;
 }
 
 // 🔹 Handle tombol daftar
