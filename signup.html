@@ -15,7 +15,6 @@
   }
   .container{opacity:0;transform:translateX(100%);animation:slideIn 0.8s ease forwards;}
   @keyframes slideIn{to{opacity:1;transform:translateX(0);} }
-
   .card{
     background:#fff;color:#333;border-radius:20px;
     padding:32px 24px;width:90%;max-width:360px;
@@ -33,7 +32,6 @@
   .small a{color:#7b4eff;text-decoration:none;font-weight:500;}
   .small a:hover{text-decoration:underline;}
   #msg{color:#ff4444;margin-top:8px;min-height:20px;}
-
   .popup{position:fixed;top:50%;left:50%;
     transform:translate(-50%,-50%) scale(0.8);
     background:white;color:#333;border-radius:16px;
@@ -133,7 +131,7 @@ function formatPhoneNumber(phone){
   return cleaned;
 }
 
-// 🔹 Signup Function — Versi lengkap
+// 🔹 Signup Function — Full version
 async function signup(email,password,name,phone,username){
   console.log("🔹 Mulai signup...");
   const userCredential = await GoopyAuth.createUserWithEmailAndPassword(email,password);
@@ -150,7 +148,7 @@ async function signup(email,password,name,phone,username){
   });
 
   const formattedPhone = formatPhoneNumber(phone);
-  const now = new Date();
+  const now = firebase.firestore.Timestamp.fromDate(new Date());
 
   const userData = {
     uid,
