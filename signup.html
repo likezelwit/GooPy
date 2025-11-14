@@ -1,60 +1,135 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Goopy — Daftar</title>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
-  body{
-    height:100vh;
-    background:linear-gradient(160deg,#007bff,#00d4ff);
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;color:#fff;
-  }
-  .container{opacity:0;transform:translateX(100%);animation:slideIn 0.8s ease forwards;}
-  @keyframes slideIn{to{opacity:1;transform:translateX(0);} }
-  .card{
-    background:#fff;color:#333;border-radius:20px;
-    padding:32px 24px;width:90%;max-width:360px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.25);text-align:center;
-  }
-  .card h2{margin-bottom:20px;color:#007bff;font-weight:600;font-size:1.6rem;}
-  .input{width:100%;padding:12px;margin:8px 0;border:none;
-    border-radius:10px;background:#f0f4ff;font-size:1rem;transition:0.25s;}
-  .input:focus{outline:none;background:#e4edff;}
-  .btn{margin-top:12px;width:100%;padding:12px;border:none;
-    border-radius:10px;background:#007bff;color:white;
-    font-size:1.05rem;cursor:pointer;transition:0.3s;}
-  .btn:hover{background:#0069e4;}
-  .small{margin-top:10px;font-size:0.9rem;}
-  .small a{color:#7b4eff;text-decoration:none;font-weight:500;}
-  .small a:hover{text-decoration:underline;}
-  #msg{color:#ff4444;margin-top:8px;min-height:20px;}
-
-  .popup{
-    position:fixed;top:50%;left:50%;
-    transform:translate(-50%,-50%) scale(0.8);
-    background:white;color:#333;border-radius:16px;
-    padding:24px 30px;text-align:center;
-    box-shadow:0 8px 25px rgba(0,0,0,0.3);
-    opacity:0;transition:0.4s ease;z-index:1000;display:none;
-  }
-  .popup.show{opacity:1;transform:translate(-50%,-50%) scale(1);display:block;}
-  .popup.success h3{color:#00a550;}
-  .popup.error h3{color:#ff4444;}
-  .popup button{margin-top:12px;padding:8px 16px;background:#007bff;
-    border:none;color:white;border-radius:8px;cursor:pointer;}
-  .popup button:hover{background:#0069e4;}
-
-  .input-group{position:relative;margin:8px 0;}
-  .input-group .input{padding-left:40px;}
-  .input-icon{
-    position:absolute;left:12px;top:50%;
-    transform:translateY(-50%);color:#007bff;font-size:1rem;
-  }
+  :root{--blue:#007bff;--bg1:#007bff;--bg2:#00d4ff}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#fff;padding:20px}
+  .card{width:100%;max-width:420px;background:#fff;color:#1f2937;border-radius:16px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+  h1{font-size:1.25rem;color:var(--blue);margin-bottom:6px}
+  p.lead{font-size:.9rem;color:#556}
+  .steps{display:flex;gap:8px;margin:16px 0 20px}
+  .step{flex:1;padding:8px;border-radius:8px;text-align:center;background:#f1f5f9;color:#94a3b8;font-weight:600;font-size:.85rem}
+  .step.active{background:linear-gradient(90deg,var(--bg1),var(--bg2));color:white;box-shadow:0 6px 18px rgba(0,123,255,.14)}
+  .form-step{display:none;animation:fade .25s ease}
+  .form-step.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:.8rem;color:#374151;margin-bottom:6px}
+  .field input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e6eef8;background:#f8fbff;font-size:.95rem}
+  .row{display:flex;gap:8px}
+  .row .field{flex:1}
+  .actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+  .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--blue);color:white}
+  .btn.ghost{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb}
+  .small{font-size:.85rem;color:#6b7280;margin-top:8px;text-align:center}
+  .popup{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:2000;min-width:260px;max-width:90%;background:white;color:#111;border-radius:12px;padding:16px;box-shadow:0 12px 40px rgba(2,6,23,.2);display:none}
+  .popup.show{display:block}
+  .popup h3{margin-bottom:6px;color:var(--blue)}
+  .muted{font-size:.85rem;color:#6b7280}
+  .review{background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #eef2ff}
+  .meta{font-size:.88rem;color:#374151;margin:6px 0}
+  .spinner{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--blue);animation:spin 1s linear infinite;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .notice{font-size:.85rem;color:#b91c1c;margin-top:8px}
 </style>
+</head>
+<body>
+
+<div class="card" role="main" aria-labelledby="title">
+  <h1 id="title">Buat Akun Goopy</h1>
+  <p class="lead">Daftar cepat — lengkapi 3 langkah untuk membuat akun lengkap.</p>
+
+  <div class="steps" aria-hidden>
+    <div class="step active" id="label-step-1">1. Akun</div>
+    <div class="step" id="label-step-2">2. Telepon</div>
+    <div class="step" id="label-step-3">3. Review</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <form id="step-1" class="form-step active" onsubmit="return false;">
+    <div class="field">
+      <label for="name">Nama lengkap</label>
+      <input id="name" type="text" placeholder="Nama kamu" autocomplete="name" />
+    </div>
+
+    <div class="field">
+      <label for="username">Username unik</label>
+      <input id="username" type="text" placeholder="username_unik" autocomplete="username" />
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="email@contoh.com" autocomplete="email" />
+    </div>
+
+    <div class="field">
+      <label for="password">Password (min 6)</label>
+      <input id="password" type="password" placeholder="Minimal 6 karakter" autocomplete="new-password" />
+    </div>
+
+    <div class="actions">
+      <div></div>
+      <button class="btn primary" id="to-step-2">Lanjut →</button>
+    </div>
+  </form>
+
+  <!-- STEP 2 -->
+  <form id="step-2" class="form-step" onsubmit="return false;">
+    <div class="field">
+      <label for="phone">Nomor Telepon</label>
+      <input id="phone" type="tel" placeholder="0812xxxx atau +62812xxxx" autocomplete="tel" />
+    </div>
+
+    <div class="field">
+      <label>Opsi (opsional)</label>
+      <input id="referrer" type="text" placeholder="Kode referral (opsional)" />
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="back-step-2">← Kembali</button>
+      <button class="btn primary" id="to-step-3">Lanjut →</button>
+    </div>
+  </form>
+
+  <!-- STEP 3 (REVIEW + SUBMIT) -->
+  <form id="step-3" class="form-step" onsubmit="return false;">
+    <div class="review" id="reviewBox">
+      <div class="meta"><strong>Nama:</strong> <span id="r-name">—</span></div>
+      <div class="meta"><strong>Username:</strong> <span id="r-username">—</span></div>
+      <div class="meta"><strong>Email:</strong> <span id="r-email">—</span></div>
+      <div class="meta"><strong>Telepon:</strong> <span id="r-phone">—</span></div>
+      <div class="meta"><strong>Opsi:</strong> <span id="r-ref">—</span></div>
+      <div class="small muted">Pastikan data sudah benar. Setelah buat, dokumen user akan dibuat lengkap di database.</div>
+    </div>
+
+    <div class="actions" style="margin-top:12px">
+      <button class="btn ghost" id="back-step-3">← Kembali</button>
+      <button class="btn primary" id="submitBtn">
+        <span id="submitLabel">Buat Akun</span>
+        <span id="submitSpinner" style="display:none" class="spinner"></span>
+      </button>
+    </div>
+
+    <div id="errorNotice" class="notice" role="alert" style="display:none"></div>
+  </form>
+
+  <div class="small" style="margin-top:12px">Sudah punya akun? <a href="./login.html">Masuk</a></div>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup" role="dialog" aria-live="polite">
+  <h3 id="popupTitle">Judul</h3>
+  <p id="popupMessage">Pesan...</p>
+  <div style="text-align:right;margin-top:10px">
+    <button id="popupClose" class="btn primary">Oke</button>
+  </div>
+</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -62,6 +137,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
+/* ========== CONFIG FIREBASE ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyAgx2eZh68OK9RKi5ilKkN7FCYPAC4fqEA",
   authDomain: "goopy-1a485.firebaseapp.com",
@@ -71,170 +147,251 @@ const firebaseConfig = {
   appId: "1:478710064427:web:a3b0c455c91f2c12db916e"
 };
 firebase.initializeApp(firebaseConfig);
-const GoopyAuth = firebase.auth();
-const GoopyDB = firebase.firestore();
-</script>
-</head>
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-<body>
-<div class="container">
-  <div class="card">
-    <h2>Buat Akun Goopy</h2>
-    <div class="form">
-      
-      <div class="input-group">
-        <i class="fas fa-user input-icon"></i>
-        <input id="su_name" class="input" placeholder="Nama lengkap" type="text">
-      </div>
+/* ========== UI helpers ========== */
+const stepLabels = [document.getElementById('label-step-1'), document.getElementById('label-step-2'), document.getElementById('label-step-3')];
+const steps = [document.getElementById('step-1'), document.getElementById('step-2'), document.getElementById('step-3')];
+let currentStep = 0;
 
-      <div class="input-group">
-        <i class="fas fa-user-tag input-icon"></i>
-        <input id="su_username" class="input" placeholder="Username unik" type="text">
-      </div>
+function goToStep(i){
+  if(i<0 || i>2) return;
+  steps[currentStep].classList.remove('active');
+  stepLabels[currentStep].classList.remove('active');
+  currentStep = i;
+  steps[currentStep].classList.add('active');
+  stepLabels[currentStep].classList.add('active');
+  // update review when go to step 3
+  if(currentStep === 2) populateReview();
+}
 
-      <div class="input-group">
-        <i class="fas fa-envelope input-icon"></i>
-        <input id="su_email" class="input" placeholder="Email" type="email">
-      </div>
+/* popup */
+const popup = document.getElementById('popup');
+const popupTitle = document.getElementById('popupTitle');
+const popupMessage = document.getElementById('popupMessage');
+document.getElementById('popupClose').onclick = ()=> popup.classList.remove('show');
+function showPopup(title,msg){
+  popupTitle.textContent = title;
+  popupMessage.textContent = msg;
+  popup.classList.add('show');
+}
 
-      <div class="input-group">
-        <i class="fas fa-phone input-icon"></i>
-        <input id="su_phone" class="input" placeholder="Nomor Telepon" type="tel">
-      </div>
+/* inputs */
+const inp = {
+  name: document.getElementById('name'),
+  username: document.getElementById('username'),
+  email: document.getElementById('email'),
+  password: document.getElementById('password'),
+  phone: document.getElementById('phone'),
+  referrer: document.getElementById('referrer')
+};
 
-      <div class="input-group">
-        <i class="fas fa-lock input-icon"></i>
-        <input id="su_password" class="input" placeholder="Password (min 6)" type="password">
-      </div>
+/* review elements */
+function populateReview(){
+  document.getElementById('r-name').textContent = inp.name.value || '—';
+  document.getElementById('r-username').textContent = inp.username.value || '—';
+  document.getElementById('r-email').textContent = inp.email.value || '—';
+  document.getElementById('r-phone').textContent = formatPhone(inp.phone.value) || '—';
+  document.getElementById('r-ref').textContent = inp.referrer.value || '—';
+}
 
-      <button id="btnSignup" class="btn">Daftar</button>
+/* validations */
+function validateStep1(){
+  if(!inp.name.value.trim()) return "Nama harus diisi";
+  if(!inp.username.value.trim()) return "Username harus diisi";
+  if(!inp.email.value.trim()) return "Email harus diisi";
+  if(!/\S+@\S+\.\S+/.test(inp.email.value)) return "Email tidak valid";
+  if(!inp.password.value || inp.password.value.length < 6) return "Password minimal 6 karakter";
+  return null;
+}
+function validateStep2(){
+  if(!inp.phone.value.trim()) return "Nomor telepon harus diisi";
+  if(!validatePhoneNumber(inp.phone.value)) return "Nomor telepon tidak valid (6-15 digit)";
+  return null;
+}
 
-      <div class="small">Sudah punya akun? <a href="./login.html">Masuk</a></div>
-      <div id="msg" class="small"></div>
-    </div>
-  </div>
-</div>
+/* phone helpers */
+function validatePhoneNumber(s){
+  const digits = (s||'').replace(/\D/g,'');
+  return digits.length >=6 && digits.length <=15;
+}
+function formatPhone(s){
+  if(!s) return "";
+  let p = s.replace(/\D/g,'');
+  if(p.startsWith('0')) p = '62' + p.slice(1);
+  if(!p.startsWith('62')) {
+    // if user typed international with leading +, allow it
+    if(s.trim().startsWith('+')) {
+      p = s.trim().replace(/\D/g,'');
+    } else {
+      // assume local if not starting with 62 or 0 - still prefix 62
+      p = '62' + p;
+    }
+  }
+  return '+' + p;
+}
 
-<!-- Popup -->
-<div id="popup" class="popup">
-  <h3></h3>
-  <p></p>
-  <button id="popupBtn">Oke</button>
-</div>
+/* button handlers */
+document.getElementById('to-step-2').onclick = () => {
+  const err = validateStep1();
+  if(err){ showPopup('Perhatian', err); return; }
+  goToStep(1);
+};
+document.getElementById('back-step-2').onclick = (e) => { e.preventDefault(); goToStep(0); };
+document.getElementById('to-step-3').onclick = () => {
+  const err = validateStep2();
+  if(err){ showPopup('Perhatian', err); return; }
+  goToStep(2);
+};
+document.getElementById('back-step-3').onclick = (e) => { e.preventDefault(); goToStep(1); };
 
-<link rel="stylesheet" 
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+/* submit */
+const submitBtn = document.getElementById('submitBtn');
+const submitLabel = document.getElementById('submitLabel');
+const submitSpinner = document.getElementById('submitSpinner');
+const errorNotice = document.getElementById('errorNotice');
 
-<script>
-// Redirect jika sudah login
-GoopyAuth.onAuthStateChanged(user => {
-  if (user) location.href = "./home.html";
+async function disableSubmit(state=true){
+  submitBtn.disabled = state;
+  if(state){
+    submitLabel.style.opacity = '0.6';
+    submitSpinner.style.display = '';
+  } else {
+    submitLabel.style.opacity = '1';
+    submitSpinner.style.display = 'none';
+  }
+}
+
+async function handleSubmit(){
+  errorNotice.style.display = 'none';
+  disableSubmit(true);
+  try{
+    // create auth
+    const email = inp.email.value.trim();
+    const pw = inp.password.value;
+    const name = inp.name.value.trim();
+    const username = inp.username.value.trim();
+    const phoneRaw = inp.phone.value.trim();
+    const phone = formatPhone(phoneRaw);
+    const referrer = inp.referrer.value.trim() || null;
+
+    // 1) create user in Firebase Auth
+    const cred = await auth.createUserWithEmailAndPassword(email, pw);
+    const user = cred.user;
+    const uid = user.uid;
+
+    // update displayName
+    await user.updateProfile({ displayName: name });
+
+    // 2) prepare userData (full defaults)
+    const now = firebase.firestore.Timestamp.now();
+    const userData = {
+      uid,
+      name,
+      username,
+      email,
+      phone: phone,
+      pin: "",
+      balance: 0,
+      verified: false,
+      createdAt: now,
+      lastLogin: now,
+      recentContacts: [],
+      transactions: [],
+      security: {
+        twoFactor: false,
+        loginAttempts: 0,
+        lastFailed: null
+      },
+      settings: {
+        theme: "light",
+        language: "id",
+        notifications: true
+      },
+      deviceInfo: {
+        userAgent: navigator.userAgent || "unknown",
+        platform: navigator.platform || "unknown",
+        language: navigator.language || "id-ID",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"
+      },
+      meta: {
+        createdFrom: "web-multi-step",
+        referrer: referrer || null
+      }
+    };
+
+    // 3) write to Firestore users/{uid}
+    await db.collection('users').doc(uid).set(userData);
+
+    // success
+    showPopup('Sukses', 'Akun berhasil dibuat. Mengalihkan ke dashboard…');
+    setTimeout(()=>{ location.href = './home.html'; }, 1200);
+
+  } catch (err) {
+    console.error("Signup error:", err);
+    // handle known errors
+    if(err && err.code === 'auth/email-already-in-use'){
+      errorNotice.style.display = 'block';
+      errorNotice.textContent = 'Email sudah terdaftar. Gunakan email lain atau masuk.';
+    } else if(err && err.code === 'auth/weak-password'){
+      errorNotice.style.display = 'block';
+      errorNotice.textContent = 'Password terlalu lemah (minimal 6 karakter).';
+    } else if(err && err.code === 'permission-denied'){
+      // Firestore rules menolak write — berikan instruksi
+      errorNotice.style.display = 'block';
+      errorNotice.textContent = 'Gagal menyimpan ke Firestore (permission-denied). Periksa Firestore rules atau coba lagi.';
+      showPopup('Kesalahan Rules', 'Permintaan berhasil membuat akun Auth, tetapi penyimpanan data ke Firestore ditolak oleh rules. Kamu bisa periksa dan sesuaikan rules atau hubungi admin.');
+    } else {
+      errorNotice.style.display = 'block';
+      errorNotice.textContent = err && err.message ? err.message : 'Terjadi kesalahan saat membuat akun.';
+    }
+  } finally {
+    disableSubmit(false);
+  }
+}
+
+submitBtn.onclick = (e) => { e.preventDefault(); handleSubmit(); };
+
+/* OPTIONAL: Autofill from previous partial attempt (localStorage) */
+(function loadPartial(){
+  try{
+    const saved = localStorage.getItem('goopy_signup_partial');
+    if(!saved) return;
+    const data = JSON.parse(saved);
+    if(data.name) inp.name.value = data.name;
+    if(data.username) inp.username.value = data.username;
+    if(data.email) inp.email.value = data.email;
+    if(data.phone) inp.phone.value = data.phone;
+    if(data.referrer) inp.referrer.value = data.referrer;
+  }catch(e){}
+})();
+
+/* save partial on each field change (so user won't lose progress) */
+['name','username','email','phone','referrer'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', ()=>{
+    const state = {
+      name: inp.name.value.trim(),
+      username: inp.username.value.trim(),
+      email: inp.email.value.trim(),
+      phone: inp.phone.value.trim(),
+      referrer: inp.referrer.value.trim()
+    };
+    try{ localStorage.setItem('goopy_signup_partial', JSON.stringify(state)); }catch(e){}
+  });
 });
 
-// Popup
-function showPopup(title, msg, type) {
-  const pop = document.getElementById("popup");
-  pop.querySelector("h3").textContent = title;
-  pop.querySelector("p").textContent = msg;
-  pop.className = "popup " + type + " show";
-  pop.style.display = "block";
-}
-document.getElementById("popupBtn").onclick = () =>
-  document.getElementById("popup").classList.remove("show");
-
-// Validate phone
-function validatePhone(phone) {
-  const digits = phone.replace(/\D/g, "");
-  return digits.length >= 6 && digits.length <= 15;
-}
-function formatPhone(phone) {
-  let p = phone.replace(/\D/g, "");
-  if (p.startsWith("0")) p = "+62" + p.substring(1);
-  if (!p.startsWith("+")) p = "+" + p;
-  return p;
-}
-
-// SIGNUP MAIN FUNCTION
-async function signup(email, pw, name, phone, username) {
-  const cred = await GoopyAuth.createUserWithEmailAndPassword(email, pw);
-  const user = cred.user;
-  const uid = user.uid;
-
-  await user.updateProfile({ displayName: name });
-
-  const now = firebase.firestore.Timestamp.now();
-
-  await GoopyDB.collection("users").doc(uid).set({
-    uid,
-    name,
-    username,
-    email,
-    phone: formatPhone(phone),
-
-    // Default fields (biar rules tidak error)
-    pin: "",
-    balance: 0,
-    verified: false,
-    createdAt: now,
-    lastLogin: now,
-    recentContacts: [],
-    transactions: [],
-
-    security: {
-      twoFactor: false,
-      loginAttempts: 0,
-      lastFailed: null
-    },
-
-    settings: {
-      theme: "light",
-      language: "id",
-      notifications: true
-    },
-
-    deviceInfo: {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    }
-  });
-
-  return user;
-}
-
-// BUTTON ACTION
-document.getElementById("btnSignup").onclick = async () => {
-  const name = su_name.value.trim();
-  const username = su_username.value.trim();
-  const email = su_email.value.trim();
-  const phone = su_phone.value.trim();
-  const pw = su_password.value.trim();
-
-  if (!name || !username || !email || !phone || !pw)
-    return showPopup("⚠️ Lengkapi Semua", "Semua field wajib diisi.", "error");
-
-  if (pw.length < 6)
-    return showPopup("⚠️ Password lemah", "Minimal 6 karakter.", "error");
-
-  if (!validatePhone(phone))
-    return showPopup("⚠️ Nomor tidak valid", "Cek kembali nomor telepon.", "error");
-
-  try {
-    await signup(email, pw, name, phone, username);
-    showPopup("🎉 Berhasil!", "Akun kamu berhasil dibuat!", "success");
-    setTimeout(() => (location.href = "./home.html"), 1200);
-  } catch (err) {
-    console.error(err);
-
-    if (err.code === "auth/email-already-in-use")
-      showPopup("❌ Email dipakai", "Gunakan email lain.", "error");
-    else if (err.code === "permission-denied")
-      showPopup("❌ Ditolak rules", "Periksa rules Firestore kamu.", "error");
-    else
-      showPopup("❌ Gagal", err.message, "error");
+/* redirect if already logged in */
+auth.onAuthStateChanged(u=>{
+  if(u) {
+    // user already logged in — redirect to home
+    // but only if not currently finishing signup (we otherwise allow)
+    // small guard: if on step 0-2 and user exists -> go home
+    setTimeout(()=>{ location.href = './home.html'; }, 600);
   }
-};
+});
 </script>
 </body>
 </html>
