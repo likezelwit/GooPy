@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
+/* ... (CSS sama seperti versi sebelumnya, tidak berubah) ... */
 *{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
 body{background:#f0f4f8;color:#333;min-height:100vh;display:flex;flex-direction:column;}
 .header{background:linear-gradient(135deg,#0083FF,#00C2FF);color:white;padding:20px;padding-top:40px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
@@ -280,21 +281,48 @@ async function submitPin(){
 async function processTransfer(){
   document.getElementById("loadingOverlay").style.display="flex";
   try{
-    // Kurangi saldo pengirim
-    userBalance -= selectedAmount;
-    await db.collection("users").doc(currentUser.uid).update({balance:userBalance});
+    const senderRef = db.collection("users").doc(currentUser.uid);
+    const recipientRef = db.collection("users").doc(recipientData.id);
 
-    // Tambahkan transaksi ke pengirim
-    await db.collection("users").doc(currentUser.uid).collection("transactions").add({
-      to:recipientData,
-      amount:selectedAmount,
-      note:document.getElementById("note").value,
-      createdAt:new Date()
+    await db.runTransaction(async (t)=>{
+      const senderDoc = await t.get(senderRef);
+      const recipientDoc = await t.get(recipientRef);
+
+      if(!senderDoc.exists) throw "Pengguna pengirim tidak ditemukan!";
+      if(!recipientDoc.exists) throw "Penerima tidak ditemukan!";
+
+      const senderBal = senderDoc.data().balance || 0;
+      if(senderBal < selectedAmount) throw "Saldo tidak cukup!";
+
+      const recipientBal = recipientDoc.data().balance || 0;
+
+      // update saldo
+      t.update(senderRef, { balance: senderBal - selectedAmount });
+      t.update(recipientRef, { balance: recipientBal + selectedAmount });
+
+      // tambah transaksi pengirim
+      t.set(senderRef.collection("transactions").doc(), {
+        to: { id: recipientData.id, name: recipientData.name },
+        amount: selectedAmount,
+        note: document.getElementById("note").value,
+        createdAt: new Date()
+      });
+
+      // tambah transaksi penerima
+      t.set(recipientRef.collection("transactions").doc(), {
+        from: { id: currentUser.uid, name: senderDoc.data().name },
+        amount: selectedAmount,
+        note: document.getElementById("note").value,
+        createdAt: new Date()
+      });
+
     });
 
+    // update UI saldo pengirim
+    userBalance -= selectedAmount;
     document.querySelector("#balanceAmount span").textContent=userBalance.toLocaleString("id-ID");
 
-    // Tampilkan halaman sukses
+    // tampilkan success page
     document.getElementById("transactionDetailFull").innerHTML=
       `<b>Penerima:</b> ${recipientData.name}<br>
       <b>Jumlah:</b> Rp ${selectedAmount.toLocaleString("id-ID")}<br>
@@ -307,8 +335,9 @@ async function processTransfer(){
     });
 
     document.getElementById("successPage").style.display="flex";
+
   } catch(e){
-    alert("Terjadi kesalahan transfer.");
+    alert("Terjadi kesalahan: "+e);
   } finally{
     document.getElementById("loadingOverlay").style.display="none";
   }
@@ -317,6 +346,7 @@ async function processTransfer(){
 // ===== BACK & SUCCESS =====
 function goBack(){ window.history.back(); }
 function closeSuccess(){ document.getElementById("successPage").style.display="none"; }
+
 </script>
 </body>
 </html>
