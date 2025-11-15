@@ -37,6 +37,9 @@
   .spinner{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--blue);animation:spin 1s linear infinite;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
   .notice{font-size:.85rem;color:#b91c1c;margin-top:8px}
+  .progress-container{width:100%;height:12px;background:#e5e7eb;border-radius:10px;margin-top:10px;overflow:hidden}
+  .progress-bar{height:100%;width:0%;background:var(--blue);transition:width 0.2s}
+  .progress-text{font-size:.8rem;color:#374151;margin-top:4px;text-align:right}
 </style>
 </head>
 <body>
@@ -56,11 +59,6 @@
     <div class="field">
       <label for="name">Nama lengkap</label>
       <input id="name" type="text" placeholder="Nama kamu" autocomplete="name" />
-    </div>
-
-    <div class="field">
-      <label for="username">Username unik</label>
-      <input id="username" type="text" placeholder="username_unik" autocomplete="username" />
     </div>
 
     <div class="field">
@@ -86,11 +84,6 @@
       <input id="phone" type="tel" placeholder="0812xxxx atau +62812xxxx" autocomplete="tel" />
     </div>
 
-    <div class="field">
-      <label>Opsi (opsional)</label>
-      <input id="referrer" type="text" placeholder="Kode referral (opsional)" />
-    </div>
-
     <div class="actions">
       <button class="btn ghost" id="back-step-2">← Kembali</button>
       <button class="btn primary" id="to-step-3">Lanjut →</button>
@@ -101,12 +94,15 @@
   <form id="step-3" class="form-step" onsubmit="return false;">
     <div class="review" id="reviewBox">
       <div class="meta"><strong>Nama:</strong> <span id="r-name">—</span></div>
-      <div class="meta"><strong>Username:</strong> <span id="r-username">—</span></div>
       <div class="meta"><strong>Email:</strong> <span id="r-email">—</span></div>
       <div class="meta"><strong>Telepon:</strong> <span id="r-phone">—</span></div>
-      <div class="meta"><strong>Opsi:</strong> <span id="r-ref">—</span></div>
       <div class="small muted">Pastikan data sudah benar. Setelah buat, dokumen user akan dibuat lengkap di database.</div>
     </div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText">0%</div>
 
     <div class="actions" style="margin-top:12px">
       <button class="btn ghost" id="back-step-3">← Kembali</button>
@@ -118,8 +114,6 @@
 
     <div id="errorNotice" class="notice" role="alert" style="display:none"></div>
   </form>
-
-  <div class="small" style="margin-top:12px">Sudah punya akun? <a href="./login.html">Masuk</a></div>
 </div>
 
 <!-- POPUP -->
@@ -137,7 +131,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-/* ========== CONFIG FIREBASE ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyAgx2eZh68OK9RKi5ilKkN7FCYPAC4fqEA",
   authDomain: "goopy-1a485.firebaseapp.com",
@@ -150,11 +143,10 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ========== UI helpers ========== */
+/* UI helpers */
 const stepLabels = [document.getElementById('label-step-1'), document.getElementById('label-step-2'), document.getElementById('label-step-3')];
 const steps = [document.getElementById('step-1'), document.getElementById('step-2'), document.getElementById('step-3')];
 let currentStep = 0;
-
 function goToStep(i){
   if(i<0 || i>2) return;
   steps[currentStep].classList.remove('active');
@@ -162,236 +154,134 @@ function goToStep(i){
   currentStep = i;
   steps[currentStep].classList.add('active');
   stepLabels[currentStep].classList.add('active');
-  // update review when go to step 3
-  if(currentStep === 2) populateReview();
+  if(currentStep===2) populateReview();
 }
 
 /* popup */
 const popup = document.getElementById('popup');
-const popupTitle = document.getElementById('popupTitle');
-const popupMessage = document.getElementById('popupMessage');
 document.getElementById('popupClose').onclick = ()=> popup.classList.remove('show');
-function showPopup(title,msg){
-  popupTitle.textContent = title;
-  popupMessage.textContent = msg;
-  popup.classList.add('show');
-}
+function showPopup(title,msg){document.getElementById('popupTitle').textContent=title;document.getElementById('popupMessage').textContent=msg;popup.classList.add('show');}
 
 /* inputs */
 const inp = {
   name: document.getElementById('name'),
-  username: document.getElementById('username'),
   email: document.getElementById('email'),
   password: document.getElementById('password'),
-  phone: document.getElementById('phone'),
-  referrer: document.getElementById('referrer')
+  phone: document.getElementById('phone')
 };
 
-/* review elements */
+/* review */
 function populateReview(){
   document.getElementById('r-name').textContent = inp.name.value || '—';
-  document.getElementById('r-username').textContent = inp.username.value || '—';
   document.getElementById('r-email').textContent = inp.email.value || '—';
   document.getElementById('r-phone').textContent = formatPhone(inp.phone.value) || '—';
-  document.getElementById('r-ref').textContent = inp.referrer.value || '—';
 }
 
-/* validations */
+/* validation */
 function validateStep1(){
   if(!inp.name.value.trim()) return "Nama harus diisi";
-  if(!inp.username.value.trim()) return "Username harus diisi";
   if(!inp.email.value.trim()) return "Email harus diisi";
   if(!/\S+@\S+\.\S+/.test(inp.email.value)) return "Email tidak valid";
-  if(!inp.password.value || inp.password.value.length < 6) return "Password minimal 6 karakter";
+  if(!inp.password.value || inp.password.value.length<6) return "Password minimal 6 karakter";
   return null;
 }
 function validateStep2(){
   if(!inp.phone.value.trim()) return "Nomor telepon harus diisi";
-  if(!validatePhoneNumber(inp.phone.value)) return "Nomor telepon tidak valid (6-15 digit)";
+  const digits = inp.phone.value.replace(/\D/g,'');
+  if(digits.length<6 || digits.length>15) return "Nomor telepon tidak valid (6-15 digit)";
   return null;
-}
-
-/* phone helpers */
-function validatePhoneNumber(s){
-  const digits = (s||'').replace(/\D/g,'');
-  return digits.length >=6 && digits.length <=15;
 }
 function formatPhone(s){
   if(!s) return "";
-  let p = s.replace(/\D/g,'');
-  if(p.startsWith('0')) p = '62' + p.slice(1);
-  if(!p.startsWith('62')) {
-    // if user typed international with leading +, allow it
-    if(s.trim().startsWith('+')) {
-      p = s.trim().replace(/\D/g,'');
-    } else {
-      // assume local if not starting with 62 or 0 - still prefix 62
-      p = '62' + p;
-    }
-  }
-  return '+' + p;
+  let p=s.replace(/\D/g,''); if(p.startsWith('0')) p='62'+p.slice(1); if(!p.startsWith('62')){if(s.trim().startsWith('+')) p=s.trim().replace(/\D/g,''); else p='62'+p;}
+  return '+'+p;
 }
 
-/* button handlers */
-document.getElementById('to-step-2').onclick = () => {
-  const err = validateStep1();
-  if(err){ showPopup('Perhatian', err); return; }
+/* step buttons */
+document.getElementById('to-step-2').onclick=()=>{
+  const err=validateStep1(); if(err){showPopup('Perhatian',err);return;}
   goToStep(1);
 };
-document.getElementById('back-step-2').onclick = (e) => { e.preventDefault(); goToStep(0); };
-document.getElementById('to-step-3').onclick = () => {
-  const err = validateStep2();
-  if(err){ showPopup('Perhatian', err); return; }
+document.getElementById('back-step-2').onclick=e=>{e.preventDefault();goToStep(0);};
+document.getElementById('to-step-3').onclick=()=>{
+  const err=validateStep2(); if(err){showPopup('Perhatian',err);return;}
   goToStep(2);
 };
-document.getElementById('back-step-3').onclick = (e) => { e.preventDefault(); goToStep(1); };
+document.getElementById('back-step-3').onclick=e=>{e.preventDefault();goToStep(1);};
 
-/* submit */
-const submitBtn = document.getElementById('submitBtn');
-const submitLabel = document.getElementById('submitLabel');
-const submitSpinner = document.getElementById('submitSpinner');
-const errorNotice = document.getElementById('errorNotice');
+/* submit with progress */
+const submitBtn=document.getElementById('submitBtn');
+const submitLabel=document.getElementById('submitLabel');
+const submitSpinner=document.getElementById('submitSpinner');
+const errorNotice=document.getElementById('errorNotice');
+const progressBar=document.getElementById('progressBar');
+const progressText=document.getElementById('progressText');
 
-async function disableSubmit(state=true){
-  submitBtn.disabled = state;
-  if(state){
-    submitLabel.style.opacity = '0.6';
-    submitSpinner.style.display = '';
-  } else {
-    submitLabel.style.opacity = '1';
-    submitSpinner.style.display = 'none';
-  }
+function setProgress(p,text){
+  progressBar.style.width=p+'%';
+  progressText.textContent=p+'% '+(text||'');
+}
+
+function generateUsername(name){
+  const base=name.trim().toLowerCase().replace(/\s+/g,'_');
+  const rnd=Math.floor(Math.random()*1000);
+  return base+rnd;
 }
 
 async function handleSubmit(){
-  errorNotice.style.display = 'none';
-  disableSubmit(true);
+  errorNotice.style.display='none';
+  submitBtn.disabled=true; submitLabel.style.opacity='0.6'; submitSpinner.style.display='inline-block';
   try{
+    let progress=0; setProgress(progress,'Memulai...');
+    // generate unique username
+    let username=generateUsername(inp.name.value);
+    progress=5; setProgress(progress,'Generate username...');
     // create auth
-    const email = inp.email.value.trim();
-    const pw = inp.password.value;
-    const name = inp.name.value.trim();
-    const username = inp.username.value.trim();
-    const phoneRaw = inp.phone.value.trim();
-    const phone = formatPhone(phoneRaw);
-    const referrer = inp.referrer.value.trim() || null;
+    const cred=await auth.createUserWithEmailAndPassword(inp.email.value,inp.password.value);
+    const user=cred.user;
+    const uid=user.uid;
+    progress=20; setProgress(progress,'Membuat akun Auth...');
 
-    // 1) create user in Firebase Auth
-    const cred = await auth.createUserWithEmailAndPassword(email, pw);
-    const user = cred.user;
-    const uid = user.uid;
+    await user.updateProfile({displayName: inp.name.value});
+    progress=30; setProgress(progress,'Update displayName...');
 
-    // update displayName
-    await user.updateProfile({ displayName: name });
-
-    // 2) prepare userData (full defaults)
-    const now = firebase.firestore.Timestamp.now();
-    const userData = {
-      uid,
-      name,
-      username,
-      email,
-      phone: phone,
-      pin: "",
-      balance: 0,
-      verified: false,
-      createdAt: now,
-      lastLogin: now,
-      recentContacts: [],
-      transactions: [],
-      security: {
-        twoFactor: false,
-        loginAttempts: 0,
-        lastFailed: null
-      },
-      settings: {
-        theme: "light",
-        language: "id",
-        notifications: true
-      },
-      deviceInfo: {
-        userAgent: navigator.userAgent || "unknown",
-        platform: navigator.platform || "unknown",
-        language: navigator.language || "id-ID",
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"
-      },
-      meta: {
-        createdFrom: "web-multi-step",
-        referrer: referrer || null
-      }
+    const now=firebase.firestore.Timestamp.now();
+    const userData={
+      uid, name: inp.name.value, username, email: inp.email.value, phone: formatPhone(inp.phone.value),
+      pin:"", balance:0, verified:false, createdAt:now, lastLogin:now, recentContacts:[], transactions:[],
+      security:{twoFactor:false,loginAttempts:0,lastFailed:null},
+      settings:{theme:"light",language:"id",notifications:true},
+      deviceInfo:{userAgent:navigator.userAgent||"unknown",platform:navigator.platform||"unknown",language:navigator.language||"id-ID",timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||"unknown"},
+      meta:{createdFrom:"web-multi-step"}
     };
+    progress=50; setProgress(progress,'Menambahkan field utama...');
 
-    // 3) write to Firestore users/{uid}
-    await db.collection('users').doc(uid).set(userData);
-
-    // success
-    showPopup('Sukses', 'Akun berhasil dibuat. Mengalihkan ke dashboard…');
-    setTimeout(()=>{ location.href = './home.html'; }, 1200);
-
-  } catch (err) {
-    console.error("Signup error:", err);
-    // handle known errors
-    if(err && err.code === 'auth/email-already-in-use'){
-      errorNotice.style.display = 'block';
-      errorNotice.textContent = 'Email sudah terdaftar. Gunakan email lain atau masuk.';
-    } else if(err && err.code === 'auth/weak-password'){
-      errorNotice.style.display = 'block';
-      errorNotice.textContent = 'Password terlalu lemah (minimal 6 karakter).';
-    } else if(err && err.code === 'permission-denied'){
-      // Firestore rules menolak write — berikan instruksi
-      errorNotice.style.display = 'block';
-      errorNotice.textContent = 'Gagal menyimpan ke Firestore (permission-denied). Periksa Firestore rules atau coba lagi.';
-      showPopup('Kesalahan Rules', 'Permintaan berhasil membuat akun Auth, tetapi penyimpanan data ke Firestore ditolak oleh rules. Kamu bisa periksa dan sesuaikan rules atau hubungi admin.');
-    } else {
-      errorNotice.style.display = 'block';
-      errorNotice.textContent = err && err.message ? err.message : 'Terjadi kesalahan saat membuat akun.';
+    // simulate adding fields step by step
+    const stepsFields=[ 'pin','settings','security','deviceInfo','meta','transactions','recentContacts','verified','lastLogin' ];
+    for(let i=0;i<stepsFields.length;i++){
+      // minimal delay to show progress
+      await new Promise(r=>setTimeout(r,100));
+      progress+=5; if(progress>100) progress=100;
+      setProgress(progress,'Menambahkan '+stepsFields[i]+'...');
     }
-  } finally {
-    disableSubmit(false);
+
+    await db.collection('users').doc(uid).set(userData);
+    progress=100; setProgress(progress,'Selesai!');
+    showPopup('Sukses','Akun berhasil dibuat. Mengalihkan ke dashboard…');
+    setTimeout(()=>{location.href='./home.html';},1200);
+  }catch(err){
+    console.error(err);
+    errorNotice.style.display='block';
+    if(err.code==='auth/email-already-in-use') errorNotice.textContent='Email sudah terdaftar.';
+    else if(err.code==='auth/weak-password') errorNotice.textContent='Password terlalu lemah.';
+    else if(err.code==='permission-denied') errorNotice.textContent='Firestore rules menolak write.';
+    else errorNotice.textContent=err.message||'Terjadi kesalahan.';
+  }finally{
+    submitBtn.disabled=false; submitLabel.style.opacity='1'; submitSpinner.style.display='none';
   }
 }
 
-submitBtn.onclick = (e) => { e.preventDefault(); handleSubmit(); };
-
-/* OPTIONAL: Autofill from previous partial attempt (localStorage) */
-(function loadPartial(){
-  try{
-    const saved = localStorage.getItem('goopy_signup_partial');
-    if(!saved) return;
-    const data = JSON.parse(saved);
-    if(data.name) inp.name.value = data.name;
-    if(data.username) inp.username.value = data.username;
-    if(data.email) inp.email.value = data.email;
-    if(data.phone) inp.phone.value = data.phone;
-    if(data.referrer) inp.referrer.value = data.referrer;
-  }catch(e){}
-})();
-
-/* save partial on each field change (so user won't lose progress) */
-['name','username','email','phone','referrer'].forEach(id=>{
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.addEventListener('input', ()=>{
-    const state = {
-      name: inp.name.value.trim(),
-      username: inp.username.value.trim(),
-      email: inp.email.value.trim(),
-      phone: inp.phone.value.trim(),
-      referrer: inp.referrer.value.trim()
-    };
-    try{ localStorage.setItem('goopy_signup_partial', JSON.stringify(state)); }catch(e){}
-  });
-});
-
-/* redirect if already logged in */
-auth.onAuthStateChanged(u=>{
-  if(u) {
-    // user already logged in — redirect to home
-    // but only if not currently finishing signup (we otherwise allow)
-    // small guard: if on step 0-2 and user exists -> go home
-    setTimeout(()=>{ location.href = './home.html'; }, 600);
-  }
-});
+submitBtn.onclick=e=>{e.preventDefault();handleSubmit();};
 </script>
 </body>
 </html>
