@@ -156,7 +156,7 @@ auth.onAuthStateChanged(async user=>{
       email:user.email,
       username:user.email?user.email.split('@')[0]:null,
       balance:0,
-      pin:null,
+      pin:"", // <-- Diubah dari null menjadi string kosong
       createdAt:new Date(),
       transactions:[],
       recentContacts:[],
@@ -166,11 +166,12 @@ auth.onAuthStateChanged(async user=>{
       settings:{},
       deviceInfo:{},
       meta:{},
+      phone: "" // <-- Ditambahkan agar sesuai dengan aturan Firestore
     });
   }
   const data=snap.data()||{};
   userBalance=data.balance||0;
-  hasPin=!!data.pin;
+  hasPin=!!data.pin; // hasPin akan true jika pin tidak kosong, false jika kosong atau null
   document.querySelector("#balanceAmount span").textContent=userBalance.toLocaleString("id-ID");
 });
 
@@ -237,11 +238,14 @@ function checkReady(){
 // ===== TRANSFER =====
 document.getElementById("transferBtn").onclick=async()=>{
   if(!recipientData||selectedAmount<=0)return alert("Pilih penerima dan jumlah.");
+  // hasPin akan benar jika ada PIN yang disimpan (bukan string kosong)
   if(hasPin){
     document.getElementById("mainContent").style.display="none";
     document.getElementById("pinPage").style.display="flex";
     pinValue="";updatePinDisplay();
   }else{
+    // Jika user belum punya PIN, langsung proses transfer (atau Anda bisa paksa mereka membuat PIN dulu)
+    // Untuk tujuan demo ini, kita langsung proses transfer.
     await processTransfer();
   }
 };
