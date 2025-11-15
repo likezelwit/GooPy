@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-/* ===== STYLING ===== */
 *{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
 body{background-color:#f0f4f8;color:#333;min-height:100vh;display:flex;flex-direction:column;}
 .header{background:linear-gradient(135deg,#0083FF,#00C2FF);color:white;padding:20px;padding-top:40px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
@@ -144,7 +143,7 @@ const db = firebase.firestore();
 
 let currentUser=null, userBalance=0, selectedAmount=0, recipientData=null, pinValue="", hasPin=false;
 
-// ===== Auth & User Load =====
+// ===== Auth & Load User =====
 auth.onAuthStateChanged(async user=>{
   if(!user) return location.href="./index.html";
   currentUser=user;
@@ -156,7 +155,7 @@ auth.onAuthStateChanged(async user=>{
       email:user.email,
       username:user.email?user.email.split('@')[0]:null,
       balance:0,
-      pin:"", // <-- Diubah dari null menjadi string kosong
+      pin:"",
       createdAt:new Date(),
       transactions:[],
       recentContacts:[],
@@ -166,12 +165,12 @@ auth.onAuthStateChanged(async user=>{
       settings:{},
       deviceInfo:{},
       meta:{},
-      phone: "" // <-- Ditambahkan agar sesuai dengan aturan Firestore
+      phone:""
     });
   }
-  const data=snap.data()||{};
+  const data=(snap.data()||{});
   userBalance=data.balance||0;
-  hasPin=!!data.pin; // hasPin akan true jika pin tidak kosong, false jika kosong atau null
+  hasPin=!!data.pin;
   document.querySelector("#balanceAmount span").textContent=userBalance.toLocaleString("id-ID");
 });
 
@@ -238,14 +237,11 @@ function checkReady(){
 // ===== TRANSFER =====
 document.getElementById("transferBtn").onclick=async()=>{
   if(!recipientData||selectedAmount<=0)return alert("Pilih penerima dan jumlah.");
-  // hasPin akan benar jika ada PIN yang disimpan (bukan string kosong)
   if(hasPin){
     document.getElementById("mainContent").style.display="none";
     document.getElementById("pinPage").style.display="flex";
     pinValue="";updatePinDisplay();
   }else{
-    // Jika user belum punya PIN, langsung proses transfer (atau Anda bisa paksa mereka membuat PIN dulu)
-    // Untuk tujuan demo ini, kita langsung proses transfer.
     await processTransfer();
   }
 };
@@ -259,16 +255,16 @@ async function verifyPin(){
   const userDoc=await db.collection("users").doc(currentUser.uid).get();
   const userData=userDoc.data();
   if(userData.pin!==pinValue){document.getElementById("pinErrorFull").textContent="PIN salah.";pinValue="";updatePinDisplay();return;}
-  await processTransfer();
   document.getElementById("pinPage").style.display="none";
+  await processTransfer();
 }
 
 // ===== PROCESS TRANSFER =====
 async function processTransfer(){
   document.getElementById("loadingOverlay").style.display="flex";
   try{
-    let code="GOOPY"+Math.floor(Math.random()*900000+100000);
-    let noteVal=document.getElementById("note").value.trim()||"-";
+    const code="GOOPY"+Math.floor(Math.random()*900000+100000);
+    const noteVal=document.getElementById("note").value.trim()||"-";
     const now=new Date();
 
     await db.runTransaction(async t=>{
@@ -278,7 +274,6 @@ async function processTransfer(){
       const sb=s.data().balance||0, rb=r.data().balance||0;
       if(sb<selectedAmount)throw new Error("Saldo tidak cukup.");
 
-      // Array senderTransactions menyimpan object
       const senderTransactions=s.data().transactions||[];
       senderTransactions.push({
         type:"out",
@@ -311,7 +306,6 @@ async function processTransfer(){
         transactions:recipientTransactions
       });
 
-      // Transaksi lengkap di collection transactions
       t.set(db.collection("transactions").doc(),{
         senderId:currentUser.uid,
         senderName: currentUser.displayName||currentUser.email,
@@ -340,7 +334,6 @@ async function processTransfer(){
     new QRCode(document.getElementById("qrCode"),{text:JSON.stringify(data),width:150,height:150});
 
     document.getElementById("successPage").style.display="flex";
-
   }catch(e){alert(e.message);}
   document.getElementById("loadingOverlay").style.display="none";
 }
